@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useCallStore } from "../stores/callStore";
+import { tauriAPI } from "../tauriAPI";
 
 const WS_URL = "ws://localhost:8000/ws";
 const RECONNECT_DELAY = 3000;
@@ -76,11 +77,8 @@ export function useAgentStream() {
         break;
       case "agent_action":
         store.addAgentAction(msg.data);
-        (window as any).electronAPI?.setClickthrough(false);
-        setTimeout(
-          () => (window as any).electronAPI?.setClickthrough(true),
-          10000
-        );
+        tauriAPI.setClickthrough(false);
+        setTimeout(() => tauriAPI.setClickthrough(true), 10000);
         break;
       case "shutdown":
         store.setConnected(false);

@@ -1,4 +1,5 @@
 # Python
+tauri_docs.txt
 __pycache__/
 *.py[cod]
 *$py.class

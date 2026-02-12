@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallStore } from "../stores/callStore";
+import { tauriAPI } from "../tauriAPI";
 import { EmotionMeter } from "./EmotionMeter";
 import { StrategyCard } from "./StrategyCard";
 import { TranscriptFeed } from "./TranscriptFeed";
@@ -26,12 +27,12 @@ export function HUD({ onStartCall, onEndCall }: HUDProps) {
       clearTimeout(leaveTimer.current);
       leaveTimer.current = null;
     }
-    (window as any).electronAPI?.setClickthrough(false);
+    tauriAPI.setClickthrough(false);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     leaveTimer.current = setTimeout(() => {
-      (window as any).electronAPI?.setClickthrough(true);
+      tauriAPI.setClickthrough(true);
     }, 120);
   }, []);
 
@@ -41,7 +42,7 @@ export function HUD({ onStartCall, onEndCall }: HUDProps) {
     ?? activeActions.find((a) => !a.dismissed);
 
   const handleClose = () => {
-    (window as any).electronAPI?.closeApp();
+    tauriAPI.closeApp();
   };
 
   return (
