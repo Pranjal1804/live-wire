@@ -110,29 +110,36 @@ deactivate
 
 echo -e "${GREEN}Python environment ready!${NC}"
 
-# ── 6. Node.js / Electron Frontend ───────────────────────────
-echo -e "\n${YELLOW}[6/8] Setting up frontend (Electron + React)...${NC}"
+# ── 6. Tauri + React Frontend ──────────────────────────────────
+echo -e "\n${YELLOW}[6/8] Setting up frontend (Tauri v2 + React)...${NC}"
+
+# Tauri system dependencies (WebKitGTK, etc.)
+sudo pacman -S --noconfirm \
+    webkit2gtk-4.1 \
+    libappindicator-gtk3 \
+    librsvg \
+    patchelf \
+    openssl
+
+# Install Rust if not present
+if ! command -v rustc &> /dev/null; then
+    echo "Installing Rust via rustup..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+else
+    echo -e "${GREEN}Rust already installed: $(rustc --version)${NC}"
+fi
+
+# Install pnpm if not present
+if ! command -v pnpm &> /dev/null; then
+    echo "Installing pnpm..."
+    npm install -g pnpm
+else
+    echo -e "${GREEN}pnpm already installed: $(pnpm --version)${NC}"
+fi
+
 cd frontend
-
-npm install \
-    electron@28.1.0 \
-    electron-builder@24.9.1 \
-    react@18.2.0 \
-    react-dom@18.2.0 \
-    typescript@5.3.3 \
-    @types/react@18.2.48 \
-    @types/react-dom@18.2.18 \
-    vite@5.0.11 \
-    @vitejs/plugin-react@4.2.1 \
-    zustand@4.4.7 \
-    framer-motion@10.18.0 \
-    tailwindcss@3.4.1 \
-    postcss@8.4.33 \
-    autoprefixer@10.4.17 \
-    concurrently@8.2.2 \
-    wait-on@7.2.0 \
-    electron-is-dev@3.0.1
-
+pnpm install
 cd ..
 
 # ── 7. Redis Setup ────────────────────────────────────────────
@@ -157,6 +164,6 @@ echo -e "  1. ${YELLOW}bash scripts/setup_audio.sh${NC}     — Configure virtua
 echo -e "  2. ${YELLOW}python scripts/download_models.py${NC} — Download AI models (~2GB)"
 echo -e "  3. ${YELLOW}cp .env.example .env${NC}             — Add your Gemini API key"
 echo -e "  4. ${YELLOW}cd backend && source venv/bin/activate && uvicorn main:app --reload${NC}"
-echo -e "  5. ${YELLOW}cd frontend && npm run electron${NC}  — Launch overlay"
+echo -e "  5. ${YELLOW}cd frontend && pnpm tauri dev${NC}    — Launch overlay"
 echo ""
 echo -e "${RED}IMPORTANT: Log out and back in for audio group changes to take effect!${NC}"
