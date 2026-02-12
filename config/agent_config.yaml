@@ -1,0 +1,36 @@
+# MAESTRO Agent Configuration
+# Tune these values to control agent behavior
+
+agent:
+  # Intervention rate limiting
+  min_seconds_between_prompts: 8    # Don't spam the agent
+  
+  # Risk thresholds
+  risk_escalation_threshold: 0.75   # Suggest escalation above this
+  risk_alert_threshold: 0.50        # Show alert above this
+  
+  # Emotion sensitivity
+  anger_confidence_threshold: 0.70  # Min confidence to trigger instant rule
+  
+  # Context window
+  transcript_context_length: 5      # Utterances to include in Gemini prompt
+  emotion_history_length: 5         # Emotions to include in trend
+
+gemini:
+  model: gemini-1.5-flash
+  max_tokens: 512
+  temperature: 0.3
+  
+whisper:
+  model: base.en          # tiny.en (faster) or small.en (more accurate)
+  language: en
+  beam_size: 5
+  
+vad:
+  threshold: 0.5
+  min_speech_ratio: 0.2   # Skip chunks with less than 20% speech
+
+audio:
+  sample_rate: 16000
+  chunk_duration: 2.0     # seconds
+  overlap: 0.3            # seconds of overlap between chunks

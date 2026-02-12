@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-electron/
+frontend/out/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.stylelintcache
+
+# MAESTRO Specific Data
+backend/data/
+data/
+*.log
+backend/config/audio_device.txt
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# IDE / OS Utils
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Large Model Files (if any cached locally)
+*.bin
+*.onnx
+*.weights
+models/cache/
+# Keep track of requirements, not the actual envs
