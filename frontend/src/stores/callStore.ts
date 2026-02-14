@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import type { BANTState } from "../components/BANTChecklist";
+import type { Battlecard } from "../components/BattlecardPanel";
 
 export type EmotionLabel =
   | "angry"
@@ -31,7 +33,8 @@ export interface AgentAction {
 
 export interface TranscriptEntry {
   text: string;
-  emotion: EmotionData;
+  source: "mic" | "loopback" | "unknown";
+  emotion?: EmotionData;
   timestamp: string;
 }
 
@@ -44,6 +47,15 @@ interface CallState {
   currentEmotion: EmotionData | null;
   transcript: TranscriptEntry[];
   activeActions: AgentAction[];
+  ws: WebSocket | null;
+
+  // New: audio capture state
+  micSecs: number;
+  loopbackSecs: number;
+  bant: BANTState;
+  activeBattlecard: Battlecard | null;
+
+  // Actions
   setConnected: (v: boolean) => void;
   setCallActive: (v: boolean) => void;
   updatePerception: (data: { transcript: string; emotion: EmotionData; risk_score: number; timestamp: string }) => void;
@@ -51,8 +63,14 @@ interface CallState {
   dismissAction: (id: string) => void;
   sendFeedback: (actionId: string, rating: number) => void;
   setRiskScore: (v: number) => void;
-  ws: WebSocket | null;
   setWs: (ws: WebSocket | null) => void;
+
+  // New actions
+  addTranscriptEntry: (entry: TranscriptEntry) => void;
+  setTalkRatio: (micSecs: number, loopbackSecs: number) => void;
+  updateBANT: (updates: Partial<BANTState>) => void;
+  setBattlecard: (card: Battlecard | null) => void;
+  resetCallState: () => void;
 }
 
 export const useCallStore = create<CallState>((set, get) => ({
@@ -66,6 +84,11 @@ export const useCallStore = create<CallState>((set, get) => ({
   activeActions: [],
   ws: null,
 
+  micSecs: 0,
+  loopbackSecs: 0,
+  bant: { budget: false, authority: false, need: false, timeline: false },
+  activeBattlecard: null,
+
   setConnected: (v) => set({ isConnected: v }),
   setCallActive: (v) => set({ isCallActive: v }),
   setRiskScore: (v) => set({ riskScore: v }),
@@ -76,8 +99,18 @@ export const useCallStore = create<CallState>((set, get) => ({
       riskScore: data.risk_score,
       transcript: [
         ...state.transcript.slice(-49),
-        { text: data.transcript, emotion: data.emotion, timestamp: data.timestamp },
+        {
+          text: data.transcript,
+          source: "unknown" as const,
+          emotion: data.emotion,
+          timestamp: data.timestamp,
+        },
       ],
+    })),
+
+  addTranscriptEntry: (entry) =>
+    set((state) => ({
+      transcript: [...state.transcript.slice(-49), entry],
     })),
 
   addAgentAction: (action) =>
@@ -105,4 +138,25 @@ export const useCallStore = create<CallState>((set, get) => ({
   },
 
   setWs: (ws) => set({ ws }),
+
+  setTalkRatio: (micSecs, loopbackSecs) => set({ micSecs, loopbackSecs }),
+
+  updateBANT: (updates) =>
+    set((state) => ({
+      bant: { ...state.bant, ...updates },
+    })),
+
+  setBattlecard: (card) => set({ activeBattlecard: card }),
+
+  resetCallState: () =>
+    set({
+      transcript: [],
+      activeActions: [],
+      riskScore: 0,
+      currentEmotion: null,
+      micSecs: 0,
+      loopbackSecs: 0,
+      bant: { budget: false, authority: false, need: false, timeline: false },
+      activeBattlecard: null,
+    }),
 }));

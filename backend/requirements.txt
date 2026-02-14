@@ -10,7 +10,7 @@ aiofiles>=23.2.1
 
 # ── Audio Capture ─────────────────────────────────────────────
 sounddevice>=0.4.6
-# numpy and scipy are provided by system packages in EndeavourOS/Arch
+# numpy and scipy may also be available as system packages on some distros
 numpy>=1.26.3
 scipy>=1.12.0
 

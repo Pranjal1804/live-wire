@@ -7,6 +7,9 @@ import { StrategyCard } from "./StrategyCard";
 import { TranscriptFeed } from "./TranscriptFeed";
 import { RiskAlert } from "./RiskAlert";
 import { AgentStatus } from "./AgentStatus";
+import { TalkListenRatio } from "./TalkListenRatio";
+import { BANTChecklist } from "./BANTChecklist";
+import { BattlecardPanel } from "./BattlecardPanel";
 
 interface HUDProps {
   onStartCall: () => void;
@@ -14,8 +17,18 @@ interface HUDProps {
 }
 
 export function HUD({ onStartCall, onEndCall }: HUDProps) {
-  const { isConnected, isCallActive, riskScore, currentEmotion, activeActions } =
-    useCallStore();
+  const {
+    isConnected,
+    isCallActive,
+    riskScore,
+    currentEmotion,
+    activeActions,
+    micSecs,
+    loopbackSecs,
+    bant,
+    activeBattlecard,
+    setBattlecard,
+  } = useCallStore();
 
   const [collapsed, setCollapsed] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
@@ -92,6 +105,12 @@ export function HUD({ onStartCall, onEndCall }: HUDProps) {
             <RiskAlert riskScore={riskScore} emotion={currentEmotion} />
             <EmotionMeter emotion={currentEmotion} />
 
+            {isCallActive && (
+              <TalkListenRatio micSecs={micSecs} loopbackSecs={loopbackSecs} />
+            )}
+
+            {isCallActive && <BANTChecklist bant={bant} />}
+
             <div className="call-controls">
               {!isCallActive ? (
                 <motion.button
@@ -113,6 +132,11 @@ export function HUD({ onStartCall, onEndCall }: HUDProps) {
                 </motion.button>
               )}
             </div>
+
+            <BattlecardPanel
+              battlecard={activeBattlecard}
+              onDismiss={() => setBattlecard(null)}
+            />
 
             <AnimatePresence mode="wait">
               {visibleAction && (

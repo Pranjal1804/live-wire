@@ -683,3 +683,230 @@ body,
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-glow);
 }
+
+/* ── Talk-to-Listen Ratio ── */
+
+.talk-ratio-container {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.talk-ratio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.talk-ratio-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.talk-ratio-bar-track {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  gap: 2px;
+}
+
+.talk-ratio-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.talk-ratio-mic {
+  background: var(--accent-cyan);
+}
+
+.talk-ratio-loopback {
+  background: var(--accent-orange, #ff9d00);
+}
+
+.talk-ratio-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.talk-ratio-label-mic {
+  color: var(--accent-cyan);
+}
+
+.talk-ratio-label-loopback {
+  color: var(--accent-orange, #ff9d00);
+}
+
+/* ── BANT Checklist ── */
+
+.bant-container {
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.bant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.bant-score {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bant-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.bant-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-dim);
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.bant-item-checked {
+  border-color: var(--accent-green);
+  background: rgba(0, 255, 163, 0.06);
+}
+
+.bant-icon {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--border-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  transition: color 0.3s, border-color 0.3s;
+}
+
+.bant-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  transition: color 0.3s;
+}
+
+/* ── Battlecard Panel ── */
+
+.battlecard-container {
+  padding: 12px 14px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: rgba(255, 140, 0, 0.06);
+  border: 1px solid rgba(255, 140, 0, 0.25);
+}
+
+.battlecard-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.battlecard-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #000;
+  background: var(--accent-orange, #ff9d00);
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.battlecard-competitor {
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.battlecard-dismiss {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 2px 6px;
+}
+
+.battlecard-dismiss:hover {
+  color: var(--text-primary);
+}
+
+.battlecard-section {
+  margin-bottom: 8px;
+}
+
+.battlecard-section-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent-orange, #ff9d00);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.battlecard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.battlecard-point {
+  font-family: var(--font-main);
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 3px 0 3px 12px;
+  position: relative;
+  line-height: 1.4;
+}
+
+.battlecard-point::before {
+  content: "\25B8";
+  position: absolute;
+  left: 0;
+  color: var(--accent-cyan);
+}
+
+.battlecard-weakness::before {
+  color: var(--accent-red);
+}
+
+.battlecard-objection {
+  font-family: var(--font-main);
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 3px 0;
+  line-height: 1.4;
+}
+
+.battlecard-objection-key {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+}

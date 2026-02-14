@@ -18,7 +18,7 @@ echo -e "${GREEN}=====================================${NC}"
 # ── Detect audio system ───────────────────────────────────────
 if systemctl --user is-active --quiet pipewire; then
     AUDIO_SYSTEM="pipewire"
-    echo -e "${GREEN}Detected: PipeWire (EndeavourOS default)${NC}"
+    echo -e "${GREEN}Detected: PipeWire${NC}"
 else
     AUDIO_SYSTEM="pulseaudio"
     echo -e "${YELLOW}Detected: PulseAudio${NC}"

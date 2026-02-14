@@ -116,19 +116,23 @@ export function TranscriptFeed() {
       <div className="transcript-list">
         <AnimatePresence mode="popLayout">
           {recent.map((entry, i) => {
-            const dotColor =
-              entry.emotion.label === "angry"
+            const emotion = entry.emotion;
+            const dotColor = emotion
+              ? emotion.label === "angry"
                 ? "var(--accent-red)"
-                : entry.emotion.label === "happy"
+                : emotion.label === "happy"
                   ? "var(--accent-green)"
-                  : entry.emotion.label === "sad"
+                  : emotion.label === "sad"
                     ? "#6B9FFF"
-                    : "var(--accent-blue)";
+                    : "var(--accent-blue)"
+              : entry.source === "mic"
+                ? "var(--accent-cyan)"
+                : "var(--accent-orange, #ff9d00)";
 
             return (
               <motion.div
                 key={entry.timestamp}
-                className={`transcript-entry ${entry.emotion.is_negative ? "entry-negative" : ""
+                className={`transcript-entry ${emotion?.is_negative ? "entry-negative" : ""
                   }`}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{
