@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { useCallStore, type AgentAction } from "../stores/callStore";
 
 const PRIORITY_STYLES = {
-  critical: { border: "#FF3B3B", glow: "#FF3B3B50", label: "CRITICAL" },
-  high: { border: "#FF8C00", glow: "#FF8C0040", label: "HIGH" },
-  medium: { border: "#FFB800", glow: "#FFB80030", label: "MEDIUM" },
-  low: { border: "#8B8B8B", glow: "#8B8B8B20", label: "INFO" },
+  critical: { border: "#CD6060", label: "CRITICAL" },
+  high: { border: "#D4A054", label: "HIGH" },
+  medium: { border: "#B8956D", label: "MEDIUM" },
+  low: { border: "#6E6E78", label: "INFO" },
 };
 
 interface StrategyCardProps {
@@ -26,8 +26,7 @@ export function StrategyCard({ action }: StrategyCardProps) {
     <motion.div
       className="strategy-card"
       style={{
-        borderColor: style.border,
-        boxShadow: `0 0 20px ${style.glow}, inset 0 0 20px ${style.glow}`,
+        borderColor: `${style.border}40`,
       }}
       initial={{ opacity: 0, y: -20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}

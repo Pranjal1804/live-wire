@@ -11,10 +11,10 @@ export function RiskAlert({ riskScore, emotion }: RiskAlertProps) {
   const pct = Math.round(riskScore * 100);
 
   const getRiskColor = () => {
-    if (pct >= 75) return "#FF3E3E";
-    if (pct >= 50) return "#FF9D00";
-    if (pct >= 25) return "#FFD600";
-    return "#00FFA3";
+    if (pct >= 75) return "#CD6060";
+    if (pct >= 50) return "#D4A054";
+    if (pct >= 25) return "#B8956D";
+    return "#6BC77C";
   };
 
   const getRiskLabel = () => {
@@ -123,11 +123,11 @@ export function TranscriptFeed() {
                 : emotion.label === "happy"
                   ? "var(--accent-green)"
                   : emotion.label === "sad"
-                    ? "#6B9FFF"
+                    ? "#6B8FBF"
                     : "var(--accent-blue)"
               : entry.source === "mic"
                 ? "var(--accent-cyan)"
-                : "var(--accent-orange, #ff9d00)";
+                : "var(--accent-orange)";
 
             return (
               <motion.div
@@ -146,10 +146,7 @@ export function TranscriptFeed() {
               >
                 <div
                   className="entry-dot"
-                  style={{
-                    background: dotColor,
-                    boxShadow: `0 0 6px ${dotColor}60`,
-                  }}
+                  style={{ background: dotColor }}
                 />
                 <span className="entry-text">{entry.text}</span>
               </motion.div>

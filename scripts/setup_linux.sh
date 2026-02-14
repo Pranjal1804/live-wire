@@ -1,20 +1,44 @@
 #!/bin/bash
-# ============================================================
-# MAESTRO -- Full System Setup for Linux (any distribution)
+# ────────────────────────────────────────────────────────────
+# MAESTRO  --  System Setup for Linux
 # Run: bash scripts/setup_linux.sh
-# ============================================================
+# ────────────────────────────────────────────────────────────
 
 set -e
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
 
-echo -e "${GREEN}=====================================${NC}"
-echo -e "${GREEN}  MAESTRO Setup -- Linux             ${NC}"
-echo -e "${GREEN}=====================================${NC}"
+# ── Colors (muted, readable) ────────────────────────────────
+RESET='\033[0m'
+BOLD='\033[1m'
+DIM='\033[2m'
+WHITE='\033[97m'
+GREEN='\033[38;5;108m'   # sage
+RED='\033[38;5;167m'     # muted coral
+AMBER='\033[38;5;179m'   # warm amber
+BLUE='\033[38;5;110m'    # steel blue
+GRAY='\033[38;5;243m'    # neutral gray
 
-# ── Detect package manager ──────────────────────────────────
+# ── Drawing helpers ──────────────────────────────────────────
+hr()      { printf "${GRAY}  %s${RESET}\n" "$(printf '%.0s─' {1..52})"; }
+header()  { printf "\n${WHITE}${BOLD}  %s${RESET}\n" "$1"; hr; }
+step()    { printf "${BLUE}  [%s/%s]${RESET} ${WHITE}%s${RESET}" "$1" "$2" "$3"; }
+ok()      { printf " ${GREEN}done${RESET}\n"; }
+skip()    { printf " ${AMBER}skipped${RESET}\n"; }
+fail()    { printf " ${RED}failed${RESET}\n"; }
+info()    { printf "${GRAY}       %s${RESET}\n" "$1"; }
+note()    { printf "${AMBER}  -->  %s${RESET}\n" "$1"; }
+
+TOTAL_STEPS=7
+
+# ── Banner ───────────────────────────────────────────────────
+clear 2>/dev/null || true
+printf "\n"
+printf "${GRAY}  ┌──────────────────────────────────────────────────┐${RESET}\n"
+printf "${GRAY}  │${RESET}  ${WHITE}${BOLD}MAESTRO${RESET}  ${DIM}System Setup${RESET}                            ${GRAY}│${RESET}\n"
+printf "${GRAY}  │${RESET}  ${DIM}Real-time AI sales coaching platform${RESET}              ${GRAY}│${RESET}\n"
+printf "${GRAY}  └──────────────────────────────────────────────────┘${RESET}\n"
+printf "\n"
+
+# ── Detect package manager ───────────────────────────────────
 detect_pkg_manager() {
     if command -v pacman &> /dev/null; then
         echo "pacman"
@@ -35,63 +59,96 @@ detect_pkg_manager() {
     fi
 }
 
-PKG_MGR=$(detect_pkg_manager)
-echo -e "Detected package manager: ${YELLOW}${PKG_MGR}${NC}"
+distro_label() {
+    case "$1" in
+        pacman) echo "Arch / EndeavourOS / Manjaro" ;;
+        apt)    echo "Debian / Ubuntu / Mint" ;;
+        dnf)    echo "Fedora / RHEL / Rocky" ;;
+        zypper) echo "openSUSE" ;;
+        emerge) echo "Gentoo" ;;
+        xbps)   echo "Void Linux" ;;
+        nix)    echo "NixOS" ;;
+        *)      echo "Unknown" ;;
+    esac
+}
 
+PKG_MGR=$(detect_pkg_manager)
+DISTRO=$(distro_label "$PKG_MGR")
+
+printf "${GRAY}  System${RESET}     $(uname -sr)\n"
+printf "${GRAY}  Package${RESET}    ${WHITE}${PKG_MGR}${RESET}  ${DIM}(${DISTRO})${RESET}\n"
+printf "\n"
+
+if [ "$PKG_MGR" = "unknown" ]; then
+    printf "${RED}  Could not detect a supported package manager.${RESET}\n"
+    printf "${DIM}  Supported: pacman, apt, dnf, zypper${RESET}\n\n"
+    exit 1
+fi
+
+# ── Package installer ────────────────────────────────────────
 install_packages() {
     case "$PKG_MGR" in
         pacman)
-            sudo pacman -Syu --noconfirm
-            sudo pacman -S --needed --noconfirm "$@"
+            sudo pacman -Syu --noconfirm > /dev/null 2>&1
+            sudo pacman -S --needed --noconfirm "$@" > /dev/null 2>&1
             ;;
         apt)
-            sudo apt-get update
-            sudo apt-get install -y "$@"
+            sudo apt-get update -qq > /dev/null 2>&1
+            sudo apt-get install -y -qq "$@" > /dev/null 2>&1
             ;;
         dnf)
-            sudo dnf install -y "$@"
+            sudo dnf install -y -q "$@" > /dev/null 2>&1
             ;;
         zypper)
-            sudo zypper install -y "$@"
+            sudo zypper install -y "$@" > /dev/null 2>&1
             ;;
         *)
-            echo -e "${RED}Unsupported package manager: ${PKG_MGR}${NC}"
-            echo "Please install these packages manually: $@"
+            printf "${RED}Unsupported: ${PKG_MGR}${RESET}\n"
+            printf "Install manually: $@\n"
             return 1
             ;;
     esac
 }
 
-# ── 1. Audio System ─────────────────────────────────────────
-echo -e "\n${YELLOW}[1/7] Checking audio system...${NC}"
+# ═════════════════════════════════════════════════════════════
+header "Installing"
+
+# ── 1. Audio System ──────────────────────────────────────────
+step 1 $TOTAL_STEPS "Audio system"
+
 if systemctl --user is-active --quiet pipewire 2>/dev/null; then
-    echo -e "${GREEN}PipeWire is active${NC}"
+    info "PipeWire active"
     case "$PKG_MGR" in
         pacman) install_packages pipewire-pulse pipewire-alsa pavucontrol ;;
         apt)    install_packages pipewire-pulse pavucontrol ;;
         dnf)    install_packages pipewire-pulseaudio pavucontrol ;;
-        *)      echo "Ensure PipeWire PulseAudio compatibility layer is installed" ;;
+        *)      true ;;
     esac
+    ok
 elif systemctl --user is-active --quiet pulseaudio 2>/dev/null; then
-    echo -e "${GREEN}PulseAudio is active${NC}"
+    info "PulseAudio active"
     case "$PKG_MGR" in
         pacman) install_packages pulseaudio pulseaudio-alsa pavucontrol ;;
         apt)    install_packages pulseaudio pavucontrol ;;
         dnf)    install_packages pulseaudio pavucontrol ;;
-        *)      echo "Ensure PulseAudio is installed" ;;
+        *)      true ;;
     esac
+    ok
 else
-    echo -e "${YELLOW}No audio daemon detected. Installing PipeWire...${NC}"
+    info "No audio daemon detected, installing PipeWire"
     case "$PKG_MGR" in
         pacman) install_packages pipewire pipewire-pulse pipewire-alsa pavucontrol ;;
         apt)    install_packages pipewire pipewire-pulse pavucontrol ;;
         dnf)    install_packages pipewire pipewire-pulseaudio pavucontrol ;;
-        *)      echo "Please install PipeWire or PulseAudio manually" ;;
+        *)      true ;;
     esac
+    ok
 fi
 
 # ── 2. Core System Dependencies ─────────────────────────────
-echo -e "\n${YELLOW}[2/7] Installing system dependencies...${NC}"
+step 2 $TOTAL_STEPS "System dependencies"
+info "python, nodejs, npm, git, ffmpeg, redis ..."
+
 case "$PKG_MGR" in
     pacman)
         install_packages \
@@ -116,89 +173,110 @@ case "$PKG_MGR" in
             librsvg2-devel patchelf
         ;;
     *)
-        echo -e "${RED}Install these manually:${NC}"
-        echo "  python3, pip, venv, nodejs, npm, git, ffmpeg, redis"
-        echo "  portaudio, alsa-lib (dev headers), cmake, pkg-config"
-        echo "  webkit2gtk-4.1 (dev), libappindicator (dev), openssl (dev)"
+        info "Install manually: python3, pip, nodejs, npm, git, ffmpeg, redis"
         ;;
 esac
+ok
 
 # ── 3. Tauri System Dependencies ────────────────────────────
-echo -e "\n${YELLOW}[3/7] Checking Tauri system dependencies...${NC}"
+step 3 $TOTAL_STEPS "Tauri dependencies"
+
 case "$PKG_MGR" in
     pacman)
         install_packages webkit2gtk-4.1 libappindicator-gtk3 librsvg patchelf openssl
+        ok
         ;;
-    apt)
-        # Already installed above with the apt block
-        echo -e "${GREEN}Tauri deps included in step 2${NC}"
-        ;;
-    dnf)
-        echo -e "${GREEN}Tauri deps included in step 2${NC}"
+    apt|dnf)
+        info "Included in step 2"
+        skip
         ;;
     *)
-        echo "Ensure webkit2gtk-4.1, libappindicator, librsvg are installed"
+        info "Install manually: webkit2gtk-4.1, libappindicator, librsvg"
+        skip
         ;;
 esac
 
-# ── 4. Rust ─────────────────────────────────────────────────
-echo -e "\n${YELLOW}[4/7] Checking Rust...${NC}"
-if ! command -v rustc &> /dev/null; then
-    echo "Installing Rust via rustup..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source "$HOME/.cargo/env"
+# ── 4. Rust ──────────────────────────────────────────────────
+step 4 $TOTAL_STEPS "Rust toolchain"
+
+if command -v rustc &> /dev/null; then
+    info "$(rustc --version)"
+    skip
 else
-    echo -e "${GREEN}Rust already installed: $(rustc --version)${NC}"
+    info "Installing via rustup"
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y > /dev/null 2>&1
+    source "$HOME/.cargo/env"
+    ok
 fi
 
 # ── 5. pnpm ─────────────────────────────────────────────────
-echo -e "\n${YELLOW}[5/7] Checking pnpm...${NC}"
-if ! command -v pnpm &> /dev/null; then
-    echo "Installing pnpm..."
-    npm install -g pnpm
+step 5 $TOTAL_STEPS "pnpm"
+
+if command -v pnpm &> /dev/null; then
+    info "v$(pnpm --version)"
+    skip
 else
-    echo -e "${GREEN}pnpm already installed: $(pnpm --version)${NC}"
+    info "Installing via npm"
+    npm install -g pnpm > /dev/null 2>&1
+    ok
 fi
 
 # ── 6. Python Backend ───────────────────────────────────────
-echo -e "\n${YELLOW}[6/7] Setting up Python virtual environment...${NC}"
+step 6 $TOTAL_STEPS "Python environment"
 cd "$(dirname "$0")/.."
 
+info "Creating venv + installing requirements"
 python3 -m venv backend/venv
 source backend/venv/bin/activate
-pip install --upgrade pip
-pip install -r backend/requirements.txt
+pip install --upgrade pip -q > /dev/null 2>&1
+pip install -r backend/requirements.txt -q > /dev/null 2>&1
 deactivate
-
-echo -e "${GREEN}Python environment ready${NC}"
+ok
 
 # ── 7. Frontend Dependencies ────────────────────────────────
-echo -e "\n${YELLOW}[7/7] Installing frontend dependencies...${NC}"
-cd frontend
-pnpm install
-cd ..
+step 7 $TOTAL_STEPS "Frontend packages"
 
-# ── Audio Permissions ───────────────────────────────────────
-echo -e "\nSetting audio permissions..."
+info "pnpm install"
+cd frontend
+pnpm install --silent > /dev/null 2>&1
+cd ..
+ok
+
+# ═════════════════════════════════════════════════════════════
+header "Post-install"
+
+# ── Audio Permissions ────────────────────────────────────────
+printf "${GRAY}  Audio groups${RESET}"
 sudo usermod -a -G audio "$USER" 2>/dev/null || true
 sudo usermod -a -G pulse "$USER" 2>/dev/null || true
 sudo usermod -a -G pulse-access "$USER" 2>/dev/null || true
+printf " ${GREEN}done${RESET}\n"
 
-# ── Redis ───────────────────────────────────────────────────
-echo "Starting Redis..."
+# ── Redis ────────────────────────────────────────────────────
+printf "${GRAY}  Redis service${RESET}"
 sudo systemctl enable redis 2>/dev/null || sudo systemctl enable redis-server 2>/dev/null || true
 sudo systemctl start redis 2>/dev/null || sudo systemctl start redis-server 2>/dev/null || true
+printf " ${GREEN}done${RESET}\n"
 
-# ── Done ────────────────────────────────────────────────────
-echo -e "\n${GREEN}============================================${NC}"
-echo -e "${GREEN}  MAESTRO Setup Complete                    ${NC}"
-echo -e "${GREEN}============================================${NC}"
-echo ""
-echo -e "Next steps:"
-echo -e "  1. ${YELLOW}bash scripts/setup_audio.sh${NC}              -- Configure audio loopback"
-echo -e "  2. ${YELLOW}python3 scripts/download_models.py${NC}       -- Download AI models"
-echo -e "  3. ${YELLOW}cp .env.example .env${NC}                     -- Add your Gemini API key"
-echo -e "  4. ${YELLOW}cd backend && source venv/bin/activate && uvicorn main:app --reload --port 8000${NC}"
-echo -e "  5. ${YELLOW}cd frontend && pnpm tauri dev${NC}            -- Launch overlay"
-echo ""
-echo -e "${RED}Log out and back in for audio group changes to take effect.${NC}"
+# ═════════════════════════════════════════════════════════════
+printf "\n"
+printf "${GRAY}  ┌──────────────────────────────────────────────────┐${RESET}\n"
+printf "${GRAY}  │${RESET}  ${GREEN}${BOLD}Setup complete${RESET}                                    ${GRAY}│${RESET}\n"
+printf "${GRAY}  └──────────────────────────────────────────────────┘${RESET}\n"
+printf "\n"
+
+header "Next steps"
+printf "${WHITE}  1.${RESET}  ${DIM}bash${RESET} scripts/setup_audio.sh\n"
+info "Configure audio loopback"
+printf "${WHITE}  2.${RESET}  ${DIM}python3${RESET} scripts/download_models.py\n"
+info "Download AI models (~400MB)"
+printf "${WHITE}  3.${RESET}  ${DIM}cp${RESET} .env.example .env\n"
+info "Add your Gemini API key"
+printf "${WHITE}  4.${RESET}  ${DIM}cd backend && source venv/bin/activate &&${RESET}\n"
+printf "      ${DIM}uvicorn main:app --reload --port 8000${RESET}\n"
+info "Start the backend"
+printf "${WHITE}  5.${RESET}  ${DIM}cd frontend && pnpm tauri dev${RESET}\n"
+info "Launch the overlay"
+printf "\n"
+note "Log out and back in for audio group changes to take effect."
+printf "\n"

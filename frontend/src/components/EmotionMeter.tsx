@@ -3,13 +3,13 @@ import { motion } from "framer-motion";
 import type { EmotionData } from "../stores/callStore";
 
 const EMOTION_COLORS: Record<string, string> = {
-  angry: "#FF3B3B",
-  disgusted: "#FF8C00",
-  fearful: "#FFB800",
-  sad: "#6B9FFF",
-  neutral: "#8B8B8B",
-  happy: "#00D68F",
-  surprised: "#C084FC",
+  angry: "#CD6060",
+  disgusted: "#B8956D",
+  fearful: "#D4A054",
+  sad: "#6B8FBF",
+  neutral: "#6E6E78",
+  happy: "#6BC77C",
+  surprised: "#9B8AC4",
 };
 
 interface EmotionMeterProps {
@@ -32,7 +32,7 @@ export function EmotionMeter({ emotion }: EmotionMeterProps) {
       <div className="emotion-main">
         <motion.div
           className="emotion-badge"
-          style={{ borderColor: color, boxShadow: `0 0 12px ${color}40` }}
+          style={{ borderColor: `${color}40` }}
           animate={{ borderColor: color }}
           transition={{ duration: 0.5 }}
         >
