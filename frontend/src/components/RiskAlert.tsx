@@ -180,9 +180,10 @@ export function AgentStatus() {
         <span className="agent-label">MAESTRO AGENT</span>
         <motion.span
           style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 9,
-            letterSpacing: 2,
+            fontFamily: "var(--font-sans)",
+            fontSize: 10.5,
+            letterSpacing: 0.5,
+            fontWeight: 500,
             color: getStatusColor(),
           }}
           animate={{ color: getStatusColor() }}
