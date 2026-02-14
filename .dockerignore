@@ -1,0 +1,25 @@
+# Frontend (not needed for backend image)
+frontend/
+scripts/
+
+# Python
+backend/venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Env files (passed at runtime via --env-file)
+.env
+.env.*
+
+# Docs
+*.md
+LICENSE

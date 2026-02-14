@@ -10,9 +10,14 @@ struct StreamHandles {
     _loopback: cpal::Stream,
 }
 
-// We cannot Send cpal::Stream across threads on all platforms, so we
-// store them in a std::sync::Mutex on the main thread side and only
-// manipulate them from Tauri commands (which run on the main thread).
+// cpal::Stream contains a raw pointer (*mut ()) that prevents auto-impl of
+// Send/Sync. We wrap it in a Mutex and only access it from serialized Tauri
+// commands, so this is safe.
+// SAFETY: StreamHandles is only accessed behind a Mutex, never moved across
+// threads without synchronization.
+unsafe impl Send for StreamHandles {}
+unsafe impl Sync for StreamHandles {}
+
 struct AudioStreams(std::sync::Mutex<Option<StreamHandles>>);
 
 // ── Existing window commands ──
