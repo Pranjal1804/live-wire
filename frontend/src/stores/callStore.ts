@@ -54,6 +54,7 @@ interface CallState {
   loopbackSecs: number;
   bant: BANTState;
   activeBattlecard: Battlecard | null;
+  clickthroughLocked: boolean;
 
   // Actions
   setConnected: (v: boolean) => void;
@@ -70,6 +71,7 @@ interface CallState {
   setTalkRatio: (micSecs: number, loopbackSecs: number) => void;
   updateBANT: (updates: Partial<BANTState>) => void;
   setBattlecard: (card: Battlecard | null) => void;
+  setClickthroughLocked: (v: boolean) => void;
   resetCallState: () => void;
 }
 
@@ -88,6 +90,7 @@ export const useCallStore = create<CallState>((set, get) => ({
   loopbackSecs: 0,
   bant: { budget: false, authority: false, need: false, timeline: false },
   activeBattlecard: null,
+  clickthroughLocked: false,
 
   setConnected: (v) => set({ isConnected: v }),
   setCallActive: (v) => set({ isCallActive: v }),
@@ -148,6 +151,8 @@ export const useCallStore = create<CallState>((set, get) => ({
 
   setBattlecard: (card) => set({ activeBattlecard: card }),
 
+  setClickthroughLocked: (v) => set({ clickthroughLocked: v }),
+
   resetCallState: () =>
     set({
       transcript: [],
@@ -158,5 +163,6 @@ export const useCallStore = create<CallState>((set, get) => ({
       loopbackSecs: 0,
       bant: { budget: false, authority: false, need: false, timeline: false },
       activeBattlecard: null,
+      clickthroughLocked: false,
     }),
 }));

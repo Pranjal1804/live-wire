@@ -1,7 +1,7 @@
 import asyncio
 import json
 import os
-from typing import Dict, Optional
+from typing import Dict
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -12,7 +12,6 @@ load_dotenv()
 from api.websocket_handler import WebSocketManager
 from api.rest_routes import router as rest_router
 from agents.orchestrator import MaestroAgent
-from audio.pipeline import AudioPipeline
 from memory.session_store import SessionStore
 from models.parakeet import get_model, decode_audio_chunk, transcribe
 from tools.battlecards import scan_transcript
@@ -20,9 +19,6 @@ from tools.battlecards import scan_transcript
 ws_manager = WebSocketManager()
 session_store = SessionStore()
 active_agents: Dict[str, MaestroAgent] = {}
-
-global_pipeline: Optional[AudioPipeline] = None
-global_pipeline_lock = asyncio.Lock()
 
 
 # ── BANT prompt template for LLM router ──
@@ -43,8 +39,6 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(warm_up_models())
     yield
     print("MAESTRO shutting down...")
-    if global_pipeline:
-        await global_pipeline.stop()
     await ws_manager.broadcast({"type": "shutdown"})
 
 
@@ -167,21 +161,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         )
 
     agent = active_agents[session_id]
-
-    global global_pipeline
-
-    async with global_pipeline_lock:
-        if global_pipeline:
-            print("Stopping existing audio pipeline to release device...")
-            await global_pipeline.stop()
-            await asyncio.sleep(0.5)
-
-        try:
-            print(f"Initializing audio pipeline for session {session_id}")
-            global_pipeline = AudioPipeline(agent=agent, session_id=session_id)
-            asyncio.create_task(global_pipeline.start())
-        except Exception as e:
-            print(f"Failed to start pipeline: {e}")
 
     try:
         while True:

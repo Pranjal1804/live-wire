@@ -361,19 +361,43 @@ pub fn start_capture(
 }
 
 /// Platform-aware loopback device finder.
+/// On Linux, searches input devices for monitor sources using prioritized
+/// keywords. Logs all discovered devices for debugging.
 fn find_loopback_device(host: &cpal::Host) -> Option<cpal::Device> {
-    // On Linux, look for a PipeWire/PulseAudio monitor source first
     #[cfg(target_os = "linux")]
     {
         if let Ok(devices) = host.input_devices() {
+            let mut all_names = Vec::new();
+            let mut best: Option<(usize, cpal::Device)> = None;
+
+            // Priority keywords (lower index = higher priority)
+            let keywords = [
+                "maestro",      // Our virtual sink from setup_audio.sh
+                "monitor of",   // PipeWire naming convention
+                ".monitor",     // PulseAudio naming convention
+                "monitor",      // Generic monitor source
+            ];
+
             for device in devices {
                 if let Ok(name) = device.name() {
+                    all_names.push(name.clone());
                     let lower = name.to_lowercase();
-                    if lower.contains("monitor") {
-                        log::info!("Found Linux monitor source: {}", name);
-                        return Some(device);
+                    for (priority, kw) in keywords.iter().enumerate() {
+                        if lower.contains(kw) {
+                            if best.as_ref().map_or(true, |(p, _)| priority < *p) {
+                                best = Some((priority, device));
+                            }
+                            break;
+                        }
                     }
                 }
+            }
+
+            log::info!("Available input devices: {:?}", all_names);
+
+            if let Some((_, device)) = best {
+                log::info!("Selected loopback: {}", device.name().unwrap_or_default());
+                return Some(device);
             }
         }
     }
@@ -389,6 +413,7 @@ fn find_loopback_device(host: &cpal::Host) -> Option<cpal::Device> {
     // Fallback for Linux: try default output device
     #[cfg(target_os = "linux")]
     {
+        log::warn!("No monitor source found, falling back to default output device");
         host.default_output_device()
     }
 }

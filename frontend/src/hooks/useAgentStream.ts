@@ -10,6 +10,7 @@ export function useAgentStream() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(false);
+  const agentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connect = useCallback(() => {
     if (
@@ -77,8 +78,17 @@ export function useAgentStream() {
         break;
       case "agent_action":
         store.addAgentAction(msg.data);
+        // Clear any previous agent timeout to prevent race conditions
+        if (agentTimerRef.current) {
+          clearTimeout(agentTimerRef.current);
+        }
         tauriAPI.setClickthrough(false);
-        setTimeout(() => tauriAPI.setClickthrough(true), 10000);
+        store.setClickthroughLocked(true);
+        agentTimerRef.current = setTimeout(() => {
+          store.setClickthroughLocked(false);
+          tauriAPI.setClickthrough(true);
+          agentTimerRef.current = null;
+        }, 10000);
         break;
       case "shutdown":
         store.setConnected(false);
@@ -95,6 +105,9 @@ export function useAgentStream() {
 
     return () => {
       mountedRef.current = false;
+      if (agentTimerRef.current) {
+        clearTimeout(agentTimerRef.current);
+      }
       if (reconnectTimerRef.current) {
         clearTimeout(reconnectTimerRef.current);
       }

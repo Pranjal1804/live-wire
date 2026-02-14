@@ -59,6 +59,7 @@ export function HUD({ onStartCall, onEndCall }: HUDProps) {
     bant,
     activeBattlecard,
     setBattlecard,
+    clickthroughLocked,
   } = useCallStore();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -75,10 +76,12 @@ export function HUD({ onStartCall, onEndCall }: HUDProps) {
   }, []);
 
   const handleMouseLeave = useCallback(() => {
+    // If an agent action timer is holding click-through off, don't override it
+    if (clickthroughLocked) return;
     leaveTimer.current = setTimeout(() => {
       tauriAPI.setClickthrough(true);
     }, 120);
-  }, []);
+  }, [clickthroughLocked]);
 
   const visibleAction = activeActions.find((a) => !a.dismissed && a.priority === "critical")
     ?? activeActions.find((a) => !a.dismissed && a.priority === "high")
