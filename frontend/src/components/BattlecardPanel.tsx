@@ -1,6 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const tap = { type: "spring" as const, stiffness: 500, damping: 30 };
+
 export interface Battlecard {
   competitor: string;
   talking_points: string[];
@@ -19,19 +21,24 @@ export function BattlecardPanel({ battlecard, onDismiss }: BattlecardPanelProps)
       {battlecard && (
         <motion.div
           className="battlecard-container"
-          initial={{ opacity: 0, y: -10, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.97 }}
-          transition={{ duration: 0.25 }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ type: "spring", damping: 26, stiffness: 300 }}
         >
           <div className="battlecard-header">
             <span className="battlecard-badge">BATTLECARD</span>
             <span className="battlecard-competitor">
               vs. {battlecard.competitor}
             </span>
-            <button className="battlecard-dismiss" onClick={onDismiss}>
+            <motion.button
+              className="battlecard-dismiss"
+              onClick={onDismiss}
+              whileTap={{ scale: 0.9 }}
+              transition={tap}
+            >
               X
-            </button>
+            </motion.button>
           </div>
 
           {battlecard.talking_points.length > 0 && (

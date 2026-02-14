@@ -53,10 +53,10 @@ export function BANTChecklist({ bant }: BANTChecklistProps) {
                 <motion.div
                   key={checked ? "on" : "off"}
                   className="bant-icon"
-                  initial={{ scale: 0.8, opacity: 0 }}
+                  initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  exit={{ scale: 0.85, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 22 }}
                   style={{
                     color: checked ? "var(--accent-green)" : "var(--text-dim)",
                     borderColor: checked

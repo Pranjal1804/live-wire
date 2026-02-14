@@ -2,6 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useCallStore, type AgentAction } from "../stores/callStore";
 
+const tap = { type: "spring" as const, stiffness: 500, damping: 30 };
+
 const PRIORITY_STYLES = {
   critical: { border: "#CD6060", label: "CRITICAL" },
   high: { border: "#D4A054", label: "HIGH" },
@@ -28,21 +30,23 @@ export function StrategyCard({ action }: StrategyCardProps) {
       style={{
         borderColor: `${style.border}40`,
       }}
-      initial={{ opacity: 0, y: -20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 20, scale: 0.95 }}
-      transition={{ type: "spring", damping: 20 }}
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 8 }}
+      transition={{ type: "spring", damping: 26, stiffness: 280 }}
     >
       <div className="card-header">
         <span className="priority-badge" style={{ color: style.border }}>
           {style.label}
         </span>
-        <button
+        <motion.button
           className="dismiss-btn"
           onClick={() => dismissAction(action.action_id)}
+          whileTap={{ scale: 0.92 }}
+          transition={tap}
         >
           X
-        </button>
+        </motion.button>
       </div>
 
       <div className="card-headline">{action.headline}</div>
@@ -76,14 +80,16 @@ export function StrategyCard({ action }: StrategyCardProps) {
         <span className="feedback-label">Was this helpful?</span>
         <div className="feedback-btns">
           {[1, 2, 3, 4, 5].map((rating) => (
-            <button
+            <motion.button
               key={rating}
               className="feedback-star"
               onClick={() => handleFeedback(rating)}
               title={`Rate ${rating}/5`}
+              whileTap={{ scale: 0.88 }}
+              transition={tap}
             >
               {rating}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>

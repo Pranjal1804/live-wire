@@ -50,10 +50,10 @@ export function RiskAlert({ riskScore, emotion }: RiskAlertProps) {
         {pct >= 75 && (
           <motion.div
             className="critical-pulse"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: [0.5, 1, 0.5], scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.6, 1, 0.6] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           >
             ESCALATION RISK
           </motion.div>
@@ -98,8 +98,8 @@ export function TranscriptFeed() {
         <div className="transcript-empty">
           <motion.div
             className="empty-icon"
-            animate={{ opacity: [1, 0.3, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            animate={{ opacity: [1, 0.35, 1] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
           >
             LIVE
           </motion.div>
@@ -134,14 +134,13 @@ export function TranscriptFeed() {
                 key={entry.timestamp}
                 className={`transcript-entry ${emotion?.is_negative ? "entry-negative" : ""
                   }`}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{
-                  opacity: Math.max(1 - i * 0.08, 0.3),
-                  x: 0,
-                  scale: 1 - i * 0.015,
+                  opacity: Math.max(1 - i * 0.07, 0.35),
+                  y: 0,
                 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
                 layout
               >
                 <div

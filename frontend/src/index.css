@@ -1,5 +1,18 @@
-@import 'geist/font/sans.css';
-@import 'geist/font/mono.css';
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   /* ── Backgrounds ── */
@@ -372,6 +385,10 @@ body,
   border-color: rgba(107, 199, 124, 0.35);
 }
 
+.btn-start:active {
+  background: rgba(107, 199, 124, 0.18);
+}
+
 .btn-stop {
   background: rgba(205, 96, 96, 0.06);
   border-color: rgba(205, 96, 96, 0.2);
@@ -381,6 +398,10 @@ body,
 .btn-stop:hover {
   background: rgba(205, 96, 96, 0.12);
   border-color: rgba(205, 96, 96, 0.35);
+}
+
+.btn-stop:active {
+  background: rgba(205, 96, 96, 0.18);
 }
 
 /* ═══════════════════════════════════════════
@@ -576,12 +597,12 @@ body,
 }
 
 .agent-dot.pulsing {
-  animation: pulse-dot 2.5s ease-in-out infinite;
+  animation: pulse-dot 3s ease-in-out infinite;
 }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
+  50% { opacity: 0.2; }
 }
 
 .pending-label {
