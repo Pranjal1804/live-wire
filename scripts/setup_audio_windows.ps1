@@ -1,71 +1,137 @@
-# ============================================================
-# MAESTRO -- Virtual Audio Setup for Windows
-# This configures virtual audio routing for meeting capture.
+# ────────────────────────────────────────────────────────────
+# MAESTRO  --  Virtual Audio Setup for Windows
 # Run: powershell -ExecutionPolicy Bypass -File scripts\setup_audio_windows.ps1
-# ============================================================
+# ────────────────────────────────────────────────────────────
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "=====================================" -ForegroundColor Green
-Write-Host "  MAESTRO -- Audio Setup (Windows)    " -ForegroundColor Green
-Write-Host "=====================================" -ForegroundColor Green
+# -- Helpers ----------------------------------------------------------
 
-# -- Check for VB-Cable -------------------------------------------
-Write-Host "`nChecking for virtual audio cable..." -ForegroundColor Yellow
+function Hr {
+    Write-Host "  ────────────────────────────────────────────────────" -ForegroundColor DarkGray
+}
+
+function Header($title) {
+    Write-Host ""
+    Write-Host "  $title" -ForegroundColor White
+    Hr
+}
+
+function Step($n, $total, $msg) {
+    Write-Host "  " -NoNewline
+    Write-Host "[$n/$total]" -ForegroundColor DarkCyan -NoNewline
+    Write-Host " $msg" -ForegroundColor White -NoNewline
+}
+
+function Ok($detail) {
+    Write-Host " done" -ForegroundColor DarkGreen -NoNewline
+    if ($detail) { Write-Host "  $detail" -ForegroundColor DarkGray } else { Write-Host "" }
+}
+
+function Skip($detail) {
+    Write-Host " skipped" -ForegroundColor DarkYellow -NoNewline
+    if ($detail) { Write-Host "  $detail" -ForegroundColor DarkGray } else { Write-Host "" }
+}
+
+function Fail($detail) {
+    Write-Host " failed" -ForegroundColor DarkRed -NoNewline
+    if ($detail) { Write-Host "  $detail" -ForegroundColor DarkGray } else { Write-Host "" }
+}
+
+function Info($msg) {
+    Write-Host "       $msg" -ForegroundColor DarkGray
+}
+
+function Note($msg) {
+    Write-Host "  -->  $msg" -ForegroundColor DarkYellow
+}
+
+# -- Banner -----------------------------------------------------------
+
+Write-Host ""
+Write-Host "  ┌──────────────────────────────────────────────────┐" -ForegroundColor DarkGray
+Write-Host -NoNewline "  │" -ForegroundColor DarkGray
+Write-Host -NoNewline "  MAESTRO" -ForegroundColor White
+Write-Host -NoNewline "  Audio Setup (Windows)                   " -ForegroundColor DarkGray
+Write-Host "│" -ForegroundColor DarkGray
+Write-Host -NoNewline "  │" -ForegroundColor DarkGray
+Write-Host -NoNewline "  Virtual audio routing for meeting capture" -ForegroundColor DarkGray
+Write-Host "        │" -ForegroundColor DarkGray
+Write-Host "  └──────────────────────────────────────────────────┘" -ForegroundColor DarkGray
+Write-Host ""
+
+# -- 1. Detect virtual audio cable ------------------------------------
+
+Step 1 4 "Detect virtual audio cable"
 
 $vbCableFound = $false
 $audioDevices = Get-CimInstance Win32_SoundDevice | Select-Object -ExpandProperty Name
 
 foreach ($dev in $audioDevices) {
     if ($dev -match "VB-Audio|CABLE|Virtual") {
-        Write-Host "  Found virtual audio device: $dev" -ForegroundColor Green
         $vbCableFound = $true
     }
 }
 
-if (-not $vbCableFound) {
+if ($vbCableFound) {
+    Ok
+    foreach ($dev in $audioDevices) {
+        if ($dev -match "VB-Audio|CABLE|Virtual") {
+            Info $dev
+        }
+    }
+} else {
+    Fail "no virtual audio cable detected"
     Write-Host ""
-    Write-Host "  No virtual audio cable detected." -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "  MAESTRO needs a virtual audio device to capture meeting audio." -ForegroundColor Yellow
-    Write-Host "  Install one of the following (free):" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "  OPTION A -- VB-Cable (Recommended):" -ForegroundColor Cyan
-    Write-Host "    1. Download from: https://vb-audio.com/Cable/" -ForegroundColor White
-    Write-Host "    2. Run VBCABLE_Setup_x64.exe as Administrator" -ForegroundColor White
-    Write-Host "    3. Reboot your PC" -ForegroundColor White
-    Write-Host "    4. Re-run this script" -ForegroundColor White
-    Write-Host ""
-    Write-Host "  OPTION B -- Virtual Audio Cable (VAC):" -ForegroundColor Cyan
-    Write-Host "    Download from: https://vac.muzychenko.net/en/" -ForegroundColor White
+    Note "MAESTRO needs a virtual audio device to capture meeting audio."
+    Note "Install one of the following (free):"
     Write-Host ""
 
-    $install = Read-Host "Would you like to open the VB-Cable download page? (y/N)"
+    Header "Option A -- VB-Cable (recommended)"
+    Info "1. Download from: https://vb-audio.com/Cable/"
+    Info "2. Run VBCABLE_Setup_x64.exe as Administrator"
+    Info "3. Reboot your PC"
+    Info "4. Re-run this script"
+
+    Header "Option B -- Virtual Audio Cable (VAC)"
+    Info "Download from: https://vac.muzychenko.net/en/"
+
+    Write-Host ""
+    $install = Read-Host "       Open the VB-Cable download page? (y/N)"
     if ($install -eq 'y' -or $install -eq 'Y') {
         Start-Process "https://vb-audio.com/Cable/"
     }
 
     Write-Host ""
-    Write-Host "After installing a virtual audio cable, re-run this script." -ForegroundColor Yellow
+    Note "After installing a virtual audio cable, re-run this script."
     exit 0
 }
 
-# -- List audio devices -------------------------------------------
-Write-Host "`nAll audio devices:" -ForegroundColor Yellow
+# -- 2. List audio devices --------------------------------------------
+
+Step 2 4 "Enumerate audio devices"
+Ok
+
+Header "Audio devices"
 $devices = Get-CimInstance Win32_SoundDevice
 $index = 0
 foreach ($dev in $devices) {
     $marker = "  "
     if ($dev.Name -match "VB-Audio|CABLE|Virtual|Monitor") {
-        $marker = "* "
+        $marker = ">>"
     }
-    Write-Host "  $marker[$index] $($dev.Name) ($($dev.Status))"
+    Write-Host "  $marker " -NoNewline -ForegroundColor DarkGreen
+    Write-Host "[$index]" -NoNewline -ForegroundColor DarkGray
+    Write-Host " $($dev.Name)" -NoNewline
+    Write-Host "  ($($dev.Status))" -ForegroundColor DarkGray
     $index++
 }
-Write-Host "  * = Virtual audio device (use for meeting capture)" -ForegroundColor Cyan
+Write-Host ""
+Info ">> = virtual audio device (use for meeting capture)"
 
-# -- Save config ---------------------------------------------------
-Write-Host "`nSaving audio device config..." -ForegroundColor Yellow
+# -- 3. Save config ---------------------------------------------------
+
+Step 3 4 "Save device config"
 
 $configDir = Join-Path $PSScriptRoot "..\config"
 if (-not (Test-Path $configDir)) {
@@ -74,37 +140,42 @@ if (-not (Test-Path $configDir)) {
 
 $configFile = Join-Path $configDir "audio_device.txt"
 
-# Try to find the CABLE output/monitor
 $cableDevice = $audioDevices | Where-Object { $_ -match "CABLE" } | Select-Object -First 1
 if ($cableDevice) {
     Set-Content -Path $configFile -Value "default`n$cableDevice"
-    Write-Host "  Saved device: $cableDevice" -ForegroundColor Green
+    Ok $cableDevice
 } else {
     Set-Content -Path $configFile -Value "default`ndefault"
-    Write-Host "  Using default device" -ForegroundColor Yellow
+    Skip "using default device"
 }
 
-# -- Instructions --------------------------------------------------
+# -- 4. Verify --------------------------------------------------------
+
+Step 4 4 "Verify"
+Ok
+
+# -- Routing instructions ---------------------------------------------
+
+Header "How to route meeting audio"
+
+Write-Host "  A.  " -NoNewline -ForegroundColor White
+Write-Host "Open Windows Sound Settings" -ForegroundColor DarkGray
+Info "Right-click speaker icon in taskbar"
+Info "Set meeting app output to 'CABLE Input (VB-Audio Virtual Cable)'"
 Write-Host ""
-Write-Host "=====================================" -ForegroundColor Green
-Write-Host "  HOW TO ROUTE YOUR MEETING AUDIO    " -ForegroundColor Green
-Write-Host "=====================================" -ForegroundColor Green
+
+Write-Host "  B.  " -NoNewline -ForegroundColor White
+Write-Host "Per-app routing" -ForegroundColor DarkGray
+Info "Zoom:        Settings > Audio > Speaker > CABLE Input"
+Info "Teams:       Settings > Devices > Speaker > CABLE Input"
+Info "Google Meet: Settings (gear) > Audio > Speaker > CABLE Input"
 Write-Host ""
-Write-Host "1. Open Windows Sound Settings (right-click speaker icon in taskbar)" -ForegroundColor White
-Write-Host "2. Set your meeting app's output to 'CABLE Input (VB-Audio Virtual Cable)'" -ForegroundColor White
+
+Write-Host "  C.  " -NoNewline -ForegroundColor White
+Write-Host "To still hear audio yourself" -ForegroundColor DarkGray
+Info "Open VB-Cable Control Panel and enable 'Listen to this device'"
+Info "Or use VoiceMeeter (free) for advanced routing"
 Write-Host ""
-Write-Host "   For Zoom:" -ForegroundColor Cyan
-Write-Host "     Settings -> Audio -> Speaker -> CABLE Input" -ForegroundColor White
+
+Note "Test it: python scripts\test_audio_capture.py"
 Write-Host ""
-Write-Host "   For Teams:" -ForegroundColor Cyan
-Write-Host "     Settings -> Devices -> Speaker -> CABLE Input" -ForegroundColor White
-Write-Host ""
-Write-Host "   For Google Meet:" -ForegroundColor Cyan
-Write-Host "     Settings (gear icon) -> Audio -> Speaker -> CABLE Input" -ForegroundColor White
-Write-Host ""
-Write-Host "3. To still hear audio yourself:" -ForegroundColor Yellow
-Write-Host "   Open VB-Cable Control Panel and enable 'Listen to this device'" -ForegroundColor White
-Write-Host "   Or use VoiceMeeter (free) for advanced routing" -ForegroundColor White
-Write-Host ""
-Write-Host "Test it:" -ForegroundColor Yellow
-Write-Host "  python scripts\test_audio_capture.py" -ForegroundColor Cyan

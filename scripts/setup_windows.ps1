@@ -1,114 +1,170 @@
-# ============================================================
-# MAESTRO -- Full System Setup for Windows
-# Run (PowerShell as Admin): powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1
-# ============================================================
+# ────────────────────────────────────────────────────────────
+# MAESTRO  --  System Setup for Windows
+# Run (Admin): powershell -ExecutionPolicy Bypass -File scripts\setup_windows.ps1
+# ────────────────────────────────────────────────────────────
 
 $ErrorActionPreference = "Stop"
 
-function Write-Step($step, $total, $msg) {
-    Write-Host "`n[$step/$total] $msg" -ForegroundColor Yellow
+# -- Helpers ----------------------------------------------------------
+
+function Hr {
+    Write-Host "  ────────────────────────────────────────────────────" -ForegroundColor DarkGray
 }
 
-Write-Host "=====================================" -ForegroundColor Green
-Write-Host "  MAESTRO Setup -- Windows            " -ForegroundColor Green
-Write-Host "=====================================" -ForegroundColor Green
+function Header($title) {
+    Write-Host ""
+    Write-Host "  $title" -ForegroundColor White
+    Hr
+}
 
-# -- 1. Check for winget or choco --------------------------------
-Write-Step 1 8 "Checking package manager..."
+function Step($n, $total, $msg) {
+    Write-Host "  " -NoNewline
+    Write-Host "[$n/$total]" -ForegroundColor DarkCyan -NoNewline
+    Write-Host " $msg" -ForegroundColor White -NoNewline
+}
+
+function Ok($detail) {
+    Write-Host " done" -ForegroundColor DarkGreen -NoNewline
+    if ($detail) { Write-Host "  $detail" -ForegroundColor DarkGray } else { Write-Host "" }
+}
+
+function Skip($detail) {
+    Write-Host " skipped" -ForegroundColor DarkYellow -NoNewline
+    if ($detail) { Write-Host "  $detail" -ForegroundColor DarkGray } else { Write-Host "" }
+}
+
+function Fail($detail) {
+    Write-Host " failed" -ForegroundColor DarkRed -NoNewline
+    if ($detail) { Write-Host "  $detail" -ForegroundColor DarkGray } else { Write-Host "" }
+}
+
+function Info($msg) {
+    Write-Host "       $msg" -ForegroundColor DarkGray
+}
+
+function Note($msg) {
+    Write-Host "  -->  $msg" -ForegroundColor DarkYellow
+}
+
+$TOTAL = 8
+
+# -- Banner -----------------------------------------------------------
+
+Write-Host ""
+Write-Host "  ┌──────────────────────────────────────────────────┐" -ForegroundColor DarkGray
+Write-Host -NoNewline "  │" -ForegroundColor DarkGray
+Write-Host -NoNewline "  MAESTRO" -ForegroundColor White
+Write-Host -NoNewline "  System Setup                            " -ForegroundColor DarkGray
+Write-Host "│" -ForegroundColor DarkGray
+Write-Host -NoNewline "  │" -ForegroundColor DarkGray
+Write-Host -NoNewline "  Real-time AI sales coaching platform     " -ForegroundColor DarkGray
+Write-Host "         │" -ForegroundColor DarkGray
+Write-Host "  └──────────────────────────────────────────────────┘" -ForegroundColor DarkGray
+Write-Host ""
+
+# -- 1. Package manager -----------------------------------------------
+
+Step 1 $TOTAL "Package manager"
 
 $useWinget = $false
-$useChoco = $false
+$useChoco  = $false
 
 if (Get-Command winget -ErrorAction SilentlyContinue) {
-    Write-Host "Found winget" -ForegroundColor Green
+    Ok "winget"
     $useWinget = $true
 } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-    Write-Host "Found chocolatey" -ForegroundColor Green
+    Ok "chocolatey"
     $useChoco = $true
 } else {
-    Write-Host "Neither winget nor chocolatey found." -ForegroundColor Red
-    Write-Host "Install winget (comes with App Installer from Microsoft Store)" -ForegroundColor Red
-    Write-Host "Or install chocolatey: https://chocolatey.org/install" -ForegroundColor Red
+    Fail
+    Note "Install winget (App Installer from Microsoft Store)"
+    Note "Or install chocolatey: https://chocolatey.org/install"
     exit 1
 }
 
-# -- 2. Install system dependencies ------------------------------
-Write-Step 2 8 "Installing system dependencies..."
+# -- 2. System dependencies -------------------------------------------
+
+Header "Installing"
+
+Step 2 $TOTAL "System dependencies"
+Info "python, nodejs, git, rust"
 
 function Install-IfMissing($cmd, $wingetId, $chocoId) {
     if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
-        Write-Host "  Installing $cmd..."
+        Info "Installing $cmd..."
         if ($useWinget) {
-            winget install --id $wingetId --accept-source-agreements --accept-package-agreements -e
+            winget install --id $wingetId --accept-source-agreements --accept-package-agreements -e 2>$null | Out-Null
         } elseif ($useChoco) {
-            choco install $chocoId -y
+            choco install $chocoId -y 2>$null | Out-Null
         }
-    } else {
-        Write-Host "  $cmd already installed" -ForegroundColor Green
     }
 }
 
 Install-IfMissing "python" "Python.Python.3.12" "python312"
-Install-IfMissing "node" "OpenJS.NodeJS.LTS" "nodejs-lts"
-Install-IfMissing "git" "Git.Git" "git"
-Install-IfMissing "rustc" "Rustlang.Rustup" "rustup.install"
+Install-IfMissing "node"   "OpenJS.NodeJS.LTS"  "nodejs-lts"
+Install-IfMissing "git"    "Git.Git"             "git"
+Install-IfMissing "rustc"  "Rustlang.Rustup"     "rustup.install"
 
-# Refresh PATH after installations
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+Ok
 
-# -- 3. Install Rust (if rustup was just installed) ----------------
-Write-Step 3 8 "Checking Rust toolchain..."
+# -- 3. Rust toolchain ------------------------------------------------
+
+Step 3 $TOTAL "Rust toolchain"
 
 if (Get-Command rustup -ErrorAction SilentlyContinue) {
-    rustup default stable
-    rustup update stable
-    Write-Host "Rust $(rustc --version)" -ForegroundColor Green
+    rustup default stable 2>$null | Out-Null
+    rustup update stable 2>$null | Out-Null
+    $rustVer = rustc --version 2>$null
+    Ok $rustVer
 } else {
-    Write-Host "rustup not found in PATH. You may need to restart your terminal." -ForegroundColor Yellow
-    Write-Host "Then run: rustup default stable" -ForegroundColor Yellow
+    Skip "restart terminal, then: rustup default stable"
 }
 
-# -- 4. Install pnpm ---------------------------------------------
-Write-Step 4 8 "Checking pnpm..."
+# -- 4. pnpm ----------------------------------------------------------
 
-if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
-    Write-Host "  Installing pnpm..."
-    npm install -g pnpm
+Step 4 $TOTAL "pnpm"
+
+if (Get-Command pnpm -ErrorAction SilentlyContinue) {
+    $pnpmVer = pnpm --version 2>$null
+    Skip "v$pnpmVer"
 } else {
-    Write-Host "  pnpm already installed: $(pnpm --version)" -ForegroundColor Green
+    npm install -g pnpm 2>$null | Out-Null
+    Ok
 }
 
-# -- 5. Install Visual Studio Build Tools (for native deps) --------
-Write-Step 5 8 "Checking C++ build tools..."
+# -- 5. C++ build tools -----------------------------------------------
 
-# Tauri on Windows needs MSVC build tools and WebView2
+Step 5 $TOTAL "C++ build tools"
+
 $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (Test-Path $vsWhere) {
-    $vsInstalls = & $vsWhere -latest -property installationPath
+    $vsInstalls = & $vsWhere -latest -property installationPath 2>$null
     if ($vsInstalls) {
-        Write-Host "  Visual Studio Build Tools found" -ForegroundColor Green
+        Ok
+    } else {
+        Skip "install Visual C++ build tools"
     }
 } else {
-    Write-Host "  Visual Studio Build Tools not detected." -ForegroundColor Yellow
-    Write-Host "  Tauri requires MSVC C++ build tools." -ForegroundColor Yellow
-    Write-Host "  Install from: https://visualstudio.microsoft.com/visual-cpp-build-tools/" -ForegroundColor Yellow
-    Write-Host "  Select 'Desktop development with C++' workload." -ForegroundColor Yellow
+    Skip
+    Info "Tauri requires MSVC C++ build tools"
+    Info "https://visualstudio.microsoft.com/visual-cpp-build-tools/"
+    Info "Select 'Desktop development with C++' workload"
 }
+Info "WebView2 is included in Windows 10/11"
 
-# WebView2 is included in Windows 10 1803+ and Windows 11
-Write-Host "  WebView2 (required by Tauri) is included in Windows 10/11" -ForegroundColor Green
+# -- 6. Python backend ------------------------------------------------
 
-# -- 6. Python backend setup --------------------------------------
-Write-Step 6 8 "Setting up Python virtual environment..."
+Step 6 $TOTAL "Python environment"
 
 Push-Location "$PSScriptRoot\.."
 
-python -m venv backend\venv
+python -m venv backend\venv 2>$null
 & backend\venv\Scripts\Activate.ps1
 
-pip install --upgrade pip
+pip install --upgrade pip -q 2>$null | Out-Null
 
-pip install `
+pip install -q `
     "fastapi>=0.109.0" `
     "uvicorn[standard]>=0.25.0" `
     "websockets>=12.0" `
@@ -134,42 +190,61 @@ pip install `
     "python-multipart>=0.0.6" `
     "slack-sdk>=3.26.2" `
     "numpy" `
-    "scipy"
+    "scipy" 2>$null | Out-Null
 
 deactivate
+Ok
 
-Write-Host "Python environment ready!" -ForegroundColor Green
+# -- 7. Frontend -------------------------------------------------------
 
-# -- 7. Frontend setup --------------------------------------------
-Write-Step 7 8 "Setting up frontend (Tauri v2 + React)..."
+Step 7 $TOTAL "Frontend packages"
 
 Push-Location frontend
-pnpm install
+Info "pnpm install"
+pnpm install --silent 2>$null | Out-Null
 Pop-Location
+Ok
 
-# -- 8. Redis (optional) ------------------------------------------
-Write-Step 8 8 "Redis setup..."
+# -- 8. Redis (optional) -----------------------------------------------
+
+Step 8 $TOTAL "Redis"
 
 if (Get-Command redis-server -ErrorAction SilentlyContinue) {
-    Write-Host "  Redis already installed" -ForegroundColor Green
+    Ok
 } else {
-    Write-Host "  Redis is optional on Windows. MAESTRO falls back to JSON file storage." -ForegroundColor Yellow
-    Write-Host "  To install Redis: winget install Redis.Redis" -ForegroundColor Yellow
-    Write-Host "  Or use Memurai (Redis-compatible for Windows): https://www.memurai.com/" -ForegroundColor Yellow
+    Skip "optional, falls back to JSON file storage"
+    Info "To install: winget install Redis.Redis"
 }
 
 Pop-Location
 
-# -- Done ---------------------------------------------------------
-Write-Host "`n=====================================" -ForegroundColor Green
-Write-Host "  MAESTRO Setup Complete!              " -ForegroundColor Green
-Write-Host "=====================================" -ForegroundColor Green
+# -- Done --------------------------------------------------------------
+
 Write-Host ""
-Write-Host "Next steps:"
-Write-Host "  1. " -NoNewline; Write-Host "powershell scripts\setup_audio_windows.ps1" -ForegroundColor Yellow -NoNewline; Write-Host " -- Configure virtual audio"
-Write-Host "  2. " -NoNewline; Write-Host "python scripts\download_models.py" -ForegroundColor Yellow -NoNewline; Write-Host "          -- Download AI models (~400MB)"
-Write-Host "  3. " -NoNewline; Write-Host "copy .env.example .env" -ForegroundColor Yellow -NoNewline; Write-Host "                       -- Add your Gemini API key"
-Write-Host "  4. " -NoNewline; Write-Host "cd backend && .\venv\Scripts\Activate.ps1 && uvicorn main:app --reload" -ForegroundColor Yellow
-Write-Host "  5. " -NoNewline; Write-Host "cd frontend && pnpm tauri dev" -ForegroundColor Yellow -NoNewline; Write-Host "              -- Launch overlay"
+Write-Host "  ┌──────────────────────────────────────────────────┐" -ForegroundColor DarkGray
+Write-Host -NoNewline "  │" -ForegroundColor DarkGray
+Write-Host -NoNewline "  Setup complete" -ForegroundColor DarkGreen
+Write-Host "                                  │" -ForegroundColor DarkGray
+Write-Host "  └──────────────────────────────────────────────────┘" -ForegroundColor DarkGray
+
+Header "Next steps"
+Write-Host "  1.  " -NoNewline -ForegroundColor White
+Write-Host "powershell scripts\setup_audio_windows.ps1" -ForegroundColor DarkGray
+Info "Configure virtual audio"
+Write-Host "  2.  " -NoNewline -ForegroundColor White
+Write-Host "python scripts\download_models.py" -ForegroundColor DarkGray
+Info "Download AI models (~400MB)"
+Write-Host "  3.  " -NoNewline -ForegroundColor White
+Write-Host "copy .env.example .env" -ForegroundColor DarkGray
+Info "Add your Gemini API key"
+Write-Host "  4.  " -NoNewline -ForegroundColor White
+Write-Host "cd backend && .\venv\Scripts\Activate.ps1 &&" -ForegroundColor DarkGray
+Write-Host "      uvicorn main:app --reload --port 8000" -ForegroundColor DarkGray
+Info "Start the backend"
+Write-Host "  5.  " -NoNewline -ForegroundColor White
+Write-Host "cd frontend && pnpm tauri dev" -ForegroundColor DarkGray
+Info "Launch the overlay"
 Write-Host ""
-Write-Host "NOTE: If you just installed Rust or Build Tools, restart your terminal first." -ForegroundColor Red
+
+Note "If you just installed Rust or Build Tools, restart your terminal first."
+Write-Host ""
